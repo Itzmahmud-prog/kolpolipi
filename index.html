@@ -43,6 +43,16 @@
       margin: 20px auto;
       padding: 0 16px 40px;
     }
+    .error-box {
+      background: #fef2f2;
+      border: 1px solid #fecaca;
+      color: #991b1b;
+      padding: 12px 14px;
+      border-radius: 8px;
+      font-size: 13px;
+      margin-bottom: 16px;
+      display: none;
+    }
     .stats-grid {
       display: grid;
       grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
@@ -185,7 +195,8 @@
   </header>
 
   <div class="container">
-    <!-- Top Summary Cards -->
+    <div id="errorBox" class="error-box"></div>
+
     <div class="stats-grid">
       <div class="stat-card">
         <div class="stat-label">মোট পাবলিশড পর্ব</div>
@@ -205,14 +216,12 @@
       </div>
     </div>
 
-    <!-- Navigation Tabs -->
     <div class="tabs">
       <button class="tab-btn active" data-tab="payouts">💸 উইথড্র রিকোয়েস্ট</button>
       <button class="tab-btn" data-tab="chapters">📚 পর্ব ও গল্পসমূহ</button>
       <button class="tab-btn" data-tab="writers">✍️ লেখক ওভারভিউ</button>
     </div>
 
-    <!-- Payout Requests Tab -->
     <div id="tab-payouts" class="panel-card">
       <div class="section-header">
         <h2>উইথড্র রিকোয়েস্ট ম্যানেজমেন্ট</h2>
@@ -234,7 +243,6 @@
       </table>
     </div>
 
-    <!-- Chapters Management Tab -->
     <div id="tab-chapters" class="panel-card hidden">
       <div class="section-header">
         <h2>পাবলিশড পর্ব ও গল্পসমূহ</h2>
@@ -257,7 +265,6 @@
       </table>
     </div>
 
-    <!-- Writers Overview Tab -->
     <div id="tab-writers" class="panel-card hidden">
       <div class="section-header">
         <h2>লেখকদের পরিসংখ্যান</h2>
@@ -279,7 +286,6 @@
     </div>
   </div>
 
-  <!-- Firebase Compat SDK -->
   <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore-compat.js"></script>
 
@@ -297,7 +303,18 @@
     firebase.initializeApp(firebaseConfig);
     const db = firebase.firestore();
 
-    // Tab switching
+    function showError(message) {
+      const box = document.getElementById("errorBox");
+      box.style.display = "block";
+      box.textContent = "ত্রুটি: " + message;
+    }
+
+    function clearError() {
+      const box = document.getElementById("errorBox");
+      box.style.display = "none";
+      box.textContent = "";
+    }
+
     document.querySelectorAll(".tab-btn").forEach((btn) => {
       btn.addEventListener("click", () => {
         document.querySelectorAll(".tab-btn").forEach((b) => b.classList.remove("active"));
@@ -311,6 +328,7 @@
     });
 
     async function loadAllAdminData() {
+      clearError();
       try {
         const [chaptersSnap, payoutsSnap, writersSnap] = await Promise.all([
           db.collection("chapters").get(),
@@ -341,7 +359,6 @@
         document.getElementById("statTotalViews").textContent = totalViews;
         document.getElementById("statWriterBalance").textContent = totalBalance.toFixed(2);
 
-        // Payouts table
         const payouts = [];
         let pendingCount = 0;
         payoutsSnap.forEach((doc) => {
@@ -362,7 +379,6 @@
         document.getElementById("statPendingPayouts").textContent = pendingCount;
         renderPayoutsTable(payouts);
 
-        // Chapters table
         const chapters = [];
         chaptersSnap.forEach((doc) => {
           const d = doc.data();
@@ -380,11 +396,10 @@
         chapters.sort((a, b) => b.createdAt - a.createdAt);
         renderChaptersTable(chapters);
 
-        // Writers table
         renderWritersTable(writersRows);
       } catch (err) {
         console.error(err);
-        alert("Firestore ডেটা লোড করতে সমস্যা হয়েছে: " + err.message);
+        showError(err.message || "Firestore ডেটা লোড করা যায়নি");
       }
     }
 
@@ -461,7 +476,7 @@
         await db.collection("payout_requests").doc(docId).update({ status: newStatus });
         loadAllAdminData();
       } catch (err) {
-        alert("স্ট্যাটাস আপডেট করা যায়নি: " + err.message);
+        showError("স্ট্যাটাস আপডেট করা যায়নি: " + err.message);
       }
     }
 
@@ -471,16 +486,16 @@
         await db.collection("chapters").doc(docId).delete();
         loadAllAdminData();
       } catch (err) {
-        alert("পর্ব মুছে ফেলা যায়নি: " + err.message);
+        showError("পর্ব মুছে ফেলা যায়নি: " + err.message);
       }
     }
 
     function escapeHtml(text) {
       return String(text)
-        .replace(/&/g, "&")
-        .replace(/</g, "<")
-        .replace(/>/g, ">")
-        .replace(/"/g, """);
+        .replace(/&/g, "&amp;")
+        .replace(/</g, "&lt;")
+        .replace(/>/g, "&gt;")
+        .replace(/"/g, "&quot;");
     }
 
     loadAllAdminData();
