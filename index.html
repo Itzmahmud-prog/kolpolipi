@@ -176,28 +176,15 @@
     .hidden {
       display: none;
     }
-    .notice {
-      background: #fffbeb;
-      border: 1px solid #fde68a;
-      color: #92400e;
-      padding: 12px 14px;
-      border-radius: 8px;
-      font-size: 13px;
-      margin-bottom: 16px;
-    }
   </style>
 </head>
 <body>
   <header>
     <div class="brand">kolpo lipi Admin</div>
-    <div class="badge">Web Control Center</div>
+    <div class="badge">Live Connected • kolpo-lipi</div>
   </header>
 
   <div class="container">
-    <div id="configWarning" class="notice">
-      <strong>Firebase Config যুক্ত করুন:</strong> কোডের <code>firebaseConfig</code> অবজেক্টে আপনার Firebase Web SDK কনফিগ বসিয়ে নিলে রিয়েল-টাইম ডেটা লোড হবে।
-    </div>
-
     <!-- Top Summary Cards -->
     <div class="stats-grid">
       <div class="stat-card">
@@ -292,27 +279,23 @@
     </div>
   </div>
 
-  <!-- Firebase Compat SDK (Easy static hosting on Vercel) -->
+  <!-- Firebase Compat SDK -->
   <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore-compat.js"></script>
 
   <script>
-    // আপনার Firebase Project -> Project Settings -> Your apps (Web) থেকে Config কপি করে এখানে বসান
     const firebaseConfig = {
-      apiKey: "YOUR_API_KEY",
-      authDomain: "YOUR_PROJECT_ID.firebaseapp.com",
-      projectId: "YOUR_PROJECT_ID",
-      storageBucket: "YOUR_PROJECT_ID.appspot.com",
-      messagingSenderId: "YOUR_SENDER_ID",
-      appId: "YOUR_APP_ID"
+      apiKey: "AIzaSyCQYPWomeaukq2CigqhLCkzAJa0e7v6IFA",
+      authDomain: "kolpo-lipi.firebaseapp.com",
+      projectId: "kolpo-lipi",
+      storageBucket: "kolpo-lipi.firebasestorage.app",
+      messagingSenderId: "969727723551",
+      appId: "1:969727723551:web:234f59488b79617bcaad2a",
+      measurementId: "G-K8PMEMPC2S"
     };
 
-    let db = null;
-    if (firebaseConfig.apiKey !== "YOUR_API_KEY") {
-      document.getElementById("configWarning").classList.add("hidden");
-      firebase.initializeApp(firebaseConfig);
-      db = firebase.firestore();
-    }
+    firebase.initializeApp(firebaseConfig);
+    const db = firebase.firestore();
 
     // Tab switching
     document.querySelectorAll(".tab-btn").forEach((btn) => {
@@ -328,11 +311,6 @@
     });
 
     async function loadAllAdminData() {
-      if (!db) {
-        renderDemoPreview();
-        return;
-      }
-
       try {
         const [chaptersSnap, payoutsSnap, writersSnap] = await Promise.all([
           db.collection("chapters").get(),
@@ -479,7 +457,6 @@
     }
 
     async function updatePayoutStatus(docId, newStatus) {
-      if (!db) return;
       try {
         await db.collection("payout_requests").doc(docId).update({ status: newStatus });
         loadAllAdminData();
@@ -489,7 +466,6 @@
     }
 
     async function deleteChapter(docId) {
-      if (!db) return;
       if (!confirm("আপনি কি এই পর্বটি স্থায়ীভাবে মুছে ফেলতে চান?")) return;
       try {
         await db.collection("chapters").doc(docId).delete();
@@ -499,51 +475,12 @@
       }
     }
 
-    function renderDemoPreview() {
-      document.getElementById("statTotalChapters").textContent = "2";
-      document.getElementById("statTotalViews").textContent = "15";
-      document.getElementById("statPendingPayouts").textContent = "1";
-      document.getElementById("statWriterBalance").textContent = "15.00";
-
-      renderPayoutsTable([
-        {
-          id: "demo_1",
-          writerName: "Mahmud",
-          method: "bKash",
-          account: "017XXXXXXXX",
-          amount: 10,
-          status: "PENDING"
-        }
-      ]);
-
-      renderChaptersTable([
-        {
-          id: "ch_1",
-          storyTitle: "নীল খামের চিঠি",
-          chapterNumber: 1,
-          category: "রহস্য",
-          writerName: "Mahmud",
-          isLocked: true,
-          isLastChapter: false
-        }
-      ]);
-
-      renderWritersTable([
-        {
-          id: "writer_kolpolipi_1",
-          name: "Mahmud",
-          views: 15,
-          balance: 15.0
-        }
-      ]);
-    }
-
     function escapeHtml(text) {
       return String(text)
-        .replace(/&/g, "&amp;")
-        .replace(/</g, "&lt;")
-        .replace(/>/g, "&gt;")
-        .replace(/"/g, "&quot;");
+        .replace(/&/g, "&")
+        .replace(/</g, "<")
+        .replace(/>/g, ">")
+        .replace(/"/g, """);
     }
 
     loadAllAdminData();
