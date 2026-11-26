@@ -3,162 +3,241 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Kolpo Lipi — Admin Control Panel</title>
+  <title>Kolpo Lipi — Admin Panel</title>
   <style>
-    * { box-sizing: border-box; font-family: system-ui, -apple-system, Segoe UI, Roboto, sans-serif; }
-    body { margin: 0; background: #f0f2f5; color: #050505; }
-    header {
-      background: #1877f2; color: #fff; padding: 14px 20px;
-      display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 10px;
+    * { box-sizing: border-box; margin: 0; padding: 0; font-family: system-ui, -apple-system, "Segoe UI", Roboto, sans-serif; }
+    body { background: #f0f2f5; color: #050505; padding: 20px; line-height: 1.5; }
+    .container { max-width: 1180px; margin: 0 auto; }
+    .topbar {
+      background: #ffffff;
+      padding: 18px 22px;
+      border-radius: 16px;
+      box-shadow: 0 2px 10px rgba(0, 0, 0, 0.05);
+      display: flex;
+      flex-wrap: wrap;
+      justify-content: space-between;
+      align-items: center;
+      gap: 12px;
+      margin-bottom: 18px;
     }
-    header h1 { margin: 0; font-size: 20px; }
-    .container { max-width: 1150px; margin: 18px auto; padding: 0 14px 40px; }
-    .grid-3 { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 12px; margin-bottom: 16px; }
-    .grid-2 { display: grid; grid-template-columns: repeat(auto-fit, minmax(340px, 1fr)); gap: 14px; margin-bottom: 16px; }
+    .topbar h1 { font-size: 22px; color: #1877f2; }
+    .topbar p { font-size: 13px; color: #65676b; }
+    .stats-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+      gap: 14px;
+      margin-bottom: 18px;
+    }
+    .stat-card {
+      background: #ffffff;
+      padding: 16px 18px;
+      border-radius: 14px;
+      box-shadow: 0 2px 8px rgba(0, 0, 0, 0.04);
+    }
+    .stat-label { font-size: 12px; color: #65676b; font-weight: 600; }
+    .stat-value { font-size: 24px; font-weight: 700; color: #050505; margin-top: 4px; }
     .card {
-      background: #fff; border-radius: 10px; padding: 16px;
-      box-shadow: 0 1px 3px rgba(0,0,0,0.08); margin-bottom: 14px;
+      background: #ffffff;
+      padding: 20px;
+      border-radius: 16px;
+      box-shadow: 0 2px 10px rgba(0, 0, 0, 0.05);
+      margin-bottom: 18px;
     }
-    .card h2, .card h3 { margin-top: 0; font-size: 16px; }
-    .stat-num { font-size: 24px; font-weight: 700; color: #1877f2; margin-top: 4px; }
-    label { display: block; font-size: 13px; font-weight: 600; margin: 10px 0 4px; }
-    input, select, textarea {
-      width: 100%; padding: 9px 11px; border: 1px solid #ccd0d5; border-radius: 7px; font-size: 14px;
+    .card h2 { font-size: 18px; margin-bottom: 14px; color: #050505; }
+    .form-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+      gap: 14px;
+      margin-bottom: 14px;
+    }
+    .field { display: flex; flex-direction: column; gap: 6px; }
+    .field label { font-size: 13px; font-weight: 600; color: #1c1e21; }
+    .field input, .field select, .field textarea {
+      width: 100%;
+      padding: 10px 12px;
+      border: 1px solid #ccd0d5;
+      border-radius: 10px;
+      font-size: 14px;
+      background: #f7f8fa;
+      color: #050505;
+    }
+    .field textarea { min-height: 76px; resize: vertical; }
+    .checks-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+      gap: 10px;
+      margin-bottom: 16px;
+    }
+    .check-item {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      background: #f0f2f5;
+      padding: 10px 12px;
+      border-radius: 10px;
+      font-size: 13px;
+      font-weight: 600;
     }
     button {
-      border: none; border-radius: 7px; padding: 8px 13px; font-size: 13px; font-weight: 600;
-      cursor: pointer; background: #1877f2; color: #fff;
+      border: none;
+      border-radius: 10px;
+      padding: 9px 14px;
+      font-size: 13px;
+      font-weight: 700;
+      cursor: pointer;
+      transition: opacity 0.15s ease;
     }
-    button.secondary { background: #e4e6eb; color: #050505; }
-    button.success { background: #16a34a; color: #fff; }
-    button.danger { background: #dc2626; color: #fff; }
-    button.warning { background: #d97706; color: #fff; }
-    .row-actions { display: flex; gap: 6px; flex-wrap: wrap; margin-top: 8px; }
+    button:hover { opacity: 0.9; }
+    .primary { background: #1877f2; color: #ffffff; }
+    .success { background: #16a34a; color: #ffffff; }
+    .warning { background: #d97706; color: #ffffff; }
+    .danger { background: #dc2626; color: #ffffff; }
+    .secondary { background: #e4e6eb; color: #050505; }
     table { width: 100%; border-collapse: collapse; font-size: 13px; }
-    th, td { border-bottom: 1px solid #e4e6eb; padding: 9px 8px; text-align: left; vertical-align: top; }
-    th { background: #f7f8fa; font-weight: 700; }
+    th, td {
+      text-align: left;
+      padding: 11px 10px;
+      border-bottom: 1px solid #e4e6eb;
+      vertical-align: top;
+    }
+    th { background: #f7f8fa; font-weight: 700; color: #1c1e21; }
     .badge {
-      display: inline-block; padding: 3px 8px; border-radius: 999px; font-size: 11px; font-weight: 700;
+      display: inline-block;
+      padding: 3px 9px;
+      border-radius: 999px;
+      font-size: 11px;
+      font-weight: 700;
     }
     .b-pending { background: #fef3c7; color: #92400e; }
-    .b-approved { background: #dcfce7; color: #166534; }
+    .b-approved, .b-paid { background: #dcfce7; color: #166534; }
     .b-rejected { background: #fee2e2; color: #991b1b; }
-    .chip {
-      display: inline-flex; align-items: center; gap: 6px; background: #e7f0ff; color: #1877f2;
-      padding: 5px 10px; border-radius: 999px; font-size: 12px; font-weight: 600; margin: 4px 6px 0 0;
+    .row-actions { display: flex; flex-wrap: wrap; gap: 6px; }
+    .preview-box {
+      max-width: 520px;
+      max-height: 160px;
+      overflow-y: auto;
+      background: #f7f8fa;
+      padding: 8px 10px;
+      border-radius: 8px;
+      margin-top: 6px;
+      font-size: 12px;
+      color: #333;
+      white-space: pre-wrap;
     }
-    .chip button { background: transparent; color: #dc2626; padding: 0 2px; font-size: 14px; }
     .toast {
-      position: fixed; bottom: 18px; right: 18px; background: #050505; color: #fff;
-      padding: 10px 16px; border-radius: 8px; font-size: 13px; display: none; z-index: 999;
+      position: fixed;
+      bottom: 20px;
+      right: 20px;
+      background: #18191a;
+      color: #ffffff;
+      padding: 12px 18px;
+      border-radius: 12px;
+      font-size: 13px;
+      font-weight: 600;
+      box-shadow: 0 6px 20px rgba(0, 0, 0, 0.2);
+      opacity: 0;
+      transform: translateY(12px);
+      transition: all 0.2s ease;
+      pointer-events: none;
+      z-index: 999;
     }
+    .toast.show { opacity: 1; transform: translateY(0); }
   </style>
 </head>
 <body>
-  <header>
-    <h1>🛠️ Kolpo Lipi — Admin Control Panel</h1>
-    <div id="syncStatus">Firestore Live Sync Active</div>
-  </header>
-
   <div class="container">
-    <!-- Top Summary -->
-    <div class="grid-3">
-      <div class="card">
-        <div>মোট পর্ব (Chapters)</div>
-        <div class="stat-num" id="statChapters">0</div>
+    <div class="topbar">
+      <div>
+        <h1>📚 Kolpo Lipi — Admin Panel</h1>
+        <p>গল্পের পর্ব অনুমোদন, রাইটার অ্যাপ্রুভাল, উইথড্র ও অ্যাপ সেটিংস নিয়ন্ত্রণ</p>
       </div>
-      <div class="card">
-        <div>পেন্ডিং পর্ব (Pending Approval)</div>
-        <div class="stat-num" id="statPendingChapters">0</div>
-      </div>
-      <div class="card">
-        <div>পেন্ডিং উইথড্র (Pending Payouts)</div>
-        <div class="stat-num" id="statPendingPayouts">0</div>
+      <div class="row-actions">
+        <button class="secondary" onclick="scrollToSection('chaptersSection')">গল্পের পর্ব</button>
+        <button class="secondary" onclick="scrollToSection('writersSection')">রাইটার ও অ্যাপ্রুভাল</button>
+        <button class="secondary" onclick="scrollToSection('payoutsSection')">উইথড্র রিকোয়েস্ট</button>
       </div>
     </div>
 
-    <!-- App Global Controls & Writer Reward/Withdraw Settings -->
-    <div class="grid-2">
-      <div class="card">
-        <h2>🎛️ অ্যাপ গ্লোবাল ফিচার কন্ট্রোল (app_config/global)</h2>
-
-        <label>ডিফল্ট অ্যাপ থিম</label>
-        <select id="cfgDefaultTheme">
-          <option value="LIGHT">LIGHT (লাইট মোড)</option>
-          <option value="READING">READING (রিডিং মোড)</option>
-          <option value="DARK">DARK (ডার্ক মোড)</option>
-        </select>
-
-        <label>রিডার ডিফল্ট ফন্ট সাইজ (sp)</label>
-        <input type="number" id="cfgDefaultFontSize" min="13" max="28" step="0.5" value="17" />
-
-        <label>নিউজ ফিড প্রিভিউ শব্দ সংখ্যা (Default: 60)</label>
-        <input type="number" id="cfgExcerptWordLimit" min="15" max="150" value="60" />
-
-        <label>ফিচার টগলসমূহ</label>
-        <div style="display:flex; flex-direction:column; gap:6px; margin-top:4px;">
-          <label style="margin:0; font-weight:500;">
-            <input type="checkbox" id="cfgAllowWriterPublish" checked style="width:auto;" /> লেখকদের নতুন পর্ব সাবমিট করার অনুমতি
-          </label>
-          <label style="margin:0; font-weight:500;">
-            <input type="checkbox" id="cfgRequireRewardAdForLocked" checked style="width:auto;" /> লকড গল্প/পর্বে Rewarded Ad বাধ্যতামূলক
-          </label>
-          <label style="margin:0; font-weight:500;">
-            <input type="checkbox" id="cfgShowCompletedBadge" checked style="width:auto;" /> সম্পন্ন গল্পে "সম্পন্ন" ব্যাজ দেখান
-          </label>
-          <label style="margin:0; font-weight:500;">
-            <input type="checkbox" id="cfgMaintenanceMode" style="width:auto;" /> মেইনটেন্যান্স মোড চালু রাখুন
-          </label>
-        </div>
-
-        <label>অ্যাপ নোটিস / ব্যানার বার্তা (ঐচ্ছিক)</label>
-        <input type="text" id="cfgAppNotice" placeholder="যেমন: নতুন পর্ব এখনই অ্যাড দেখে আনলক করুন!" />
-
-        <div class="row-actions" style="margin-top:14px;">
-          <button class="success" onclick="saveGlobalConfig()">💾 গ্লোবাল সেটিংস সেভ করুন</button>
-        </div>
+    <!-- Summary Stats -->
+    <div class="stats-grid">
+      <div class="stat-card">
+        <div class="stat-label">মোট পর্ব</div>
+        <div class="stat-value" id="statTotalChapters">0</div>
       </div>
-
-      <div class="card">
-        <h2>💰 রাইটার আর্নিং ও উইথড্র কন্ট্রোল</h2>
-
-        <label>প্রতি আনলক ভিউতে রাইটার রিওয়ার্ড (টাকা / পয়েন্ট)</label>
-        <input type="number" id="cfgUnlockRewardAmount" min="0" step="0.5" value="1.0" />
-
-        <label>সর্বনিম্ন উইথড্র সীমা (Minimum Withdraw)</label>
-        <input type="number" id="cfgMinWithdrawAmount" min="1" step="1" value="10" />
-
-        <label style="margin-top:10px; font-weight:500;">
-          <input type="checkbox" id="cfgWithdrawEnabled" checked style="width:auto;" /> Writer Profile থেকে উইথড্র রিকোয়েস্ট চালু রাখুন
-        </label>
-
-        <hr style="margin:14px 0; border:none; border-top:1px solid #e4e6eb;" />
-
-        <h3>🗂️ ক্যাটাগরি ম্যানেজমেন্ট</h3>
-        <div style="display:flex; gap:8px;">
-          <input type="text" id="newCategoryInput" placeholder="নতুন ক্যাটাগরি (যেমন: থ্রিলার)" />
-          <button onclick="addCategory()">যোগ</button>
-        </div>
-        <div id="categoryChipsList" style="margin-top:8px;"></div>
-
-        <div class="row-actions" style="margin-top:14px;">
-          <button class="success" onclick="saveGlobalConfig()">💾 রিওয়ার্ড ও ক্যাটাগরি সেভ করুন</button>
-        </div>
+      <div class="stat-card">
+        <div class="stat-label">Pending পর্ব</div>
+        <div class="stat-value" id="statPendingChapters">0</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-label">মোট রাইটার</div>
+        <div class="stat-value" id="statTotalWriters">0</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-label">Pending উইথড্র</div>
+        <div class="stat-value" id="statPendingPayouts">0</div>
       </div>
     </div>
 
-    <!-- Chapters Moderation & Lock/Completed Control -->
+    <!-- Global App Config -->
     <div class="card">
-      <h2>📚 গল্প ও পর্ব নিয়ন্ত্রণ (Approve / Reject / Lock / Completed / Delete)</h2>
+      <h2>⚙️ গ্লোবাল অ্যাপ সেটিংস (app_config/global)</h2>
+      <div class="form-grid">
+        <div class="field">
+          <label for="cfgDefaultTheme">ডিফল্ট থিম</label>
+          <select id="cfgDefaultTheme">
+            <option value="LIGHT">LIGHT</option>
+            <option value="READING">READING</option>
+            <option value="DARK">DARK</option>
+          </select>
+        </div>
+        <div class="field">
+          <label for="cfgDefaultFontSize">ডিফল্ট ফন্ট সাইজ (sp)</label>
+          <input type="number" id="cfgDefaultFontSize" step="0.5" min="12" max="28" value="17" />
+        </div>
+        <div class="field">
+          <label for="cfgExcerptWordLimit">প্রিভিউ শব্দ সীমা</label>
+          <input type="number" id="cfgExcerptWordLimit" min="20" max="300" value="60" />
+        </div>
+        <div class="field">
+          <label for="cfgUnlockReward">প্রতি আনলকে রাইটার রিওয়ার্ড</label>
+          <input type="number" id="cfgUnlockReward" step="0.1" min="0" value="1" />
+        </div>
+        <div class="field">
+          <label for="cfgMinWithdraw">সর্বনিম্ন উইথড্র পরিমাণ</label>
+          <input type="number" id="cfgMinWithdraw" step="1" min="1" value="10" />
+        </div>
+        <div class="field">
+          <label for="cfgCategories">ক্যাটাগরি সমূহ (কমা দিয়ে লিখুন)</label>
+          <input type="text" id="cfgCategories" value="গল্প, রোমান্টিক, রহস্য, ভৌতিক" />
+        </div>
+      </div>
+
+      <div class="field" style="margin-bottom: 14px;">
+        <label for="cfgAppNotice">অ্যাপ নোটিশ / ঘোষণা</label>
+        <textarea id="cfgAppNotice" placeholder="অ্যাপে দেখানোর মতো কোনো নোটিশ থাকলে লিখুন..."></textarea>
+      </div>
+
+      <div class="checks-grid">
+        <label class="check-item"><input type="checkbox" id="cfgAllowWriterPublish" checked /> রাইটারদের নতুন পর্ব সাবমিট চালু</label>
+        <label class="check-item"><input type="checkbox" id="cfgRequireRewardAd" checked /> লকড পর্বে Rewarded Ad বাধ্যতামূলক</label>
+        <label class="check-item"><input type="checkbox" id="cfgShowCompletedBadge" checked /> সম্পন্ন গল্পের ব্যাজ দেখান</label>
+        <label class="check-item"><input type="checkbox" id="cfgWithdrawEnabled" checked /> উইথড্র রিকোয়েস্ট চালু</label>
+        <label class="check-item"><input type="checkbox" id="cfgMaintenanceMode" /> মেইনটেন্যান্স মোড</label>
+      </div>
+
+      <button class="primary" onclick="saveGlobalConfig()">সেটিংস সেভ করুন</button>
+    </div>
+
+    <!-- Chapters Approval Table -->
+    <div class="card" id="chaptersSection">
+      <h2>📖 গল্পের পর্বসমূহ (PENDING / APPROVED / REJECTED)</h2>
       <div style="overflow-x:auto;">
         <table>
           <thead>
             <tr>
               <th>গল্প ও পর্ব</th>
               <th>লেখক</th>
-              <th>ক্যাটাগরি</th>
-              <th>লক</th>
-              <th>সম্পন্ন</th>
+              <th>ক্যাটাগরি ও লক</th>
               <th>স্ট্যাটাস</th>
               <th>অ্যাকশন</th>
             </tr>
@@ -168,18 +247,19 @@
       </div>
     </div>
 
-    <!-- Writers Balance & Views Control -->
-    <div class="card">
-      <h2>✍️ রাইটার অ্যাকাউন্ট, ব্যালেন্স ও আনলক ভিউ নিয়ন্ত্রণ</h2>
+    <!-- Writers Account, Approval & Balance Control -->
+    <div class="card" id="writersSection">
+      <h2>✍️ রাইটার অ্যাকাউন্ট, অ্যাপ্রুভাল ও ব্যালেন্স নিয়ন্ত্রণ</h2>
       <div style="overflow-x:auto;">
         <table>
           <thead>
             <tr>
               <th>Writer ID</th>
-              <th>নাম</th>
+              <th>নাম ও নম্বর</th>
+              <th>Writer Approval</th>
               <th>ব্যালেন্স</th>
               <th>আনলক ভিউ</th>
-              <th>ব্যালেন্স এডিট</th>
+              <th>অ্যাকশন</th>
             </tr>
           </thead>
           <tbody id="writersTableBody"></tbody>
@@ -187,15 +267,15 @@
       </div>
     </div>
 
-    <!-- Payout / Withdraw Requests Control -->
-    <div class="card">
-      <h2>💸 উইথড্র রিকোয়েস্ট ম্যানেজমেন্ট (payout_requests)</h2>
+    <!-- Payout / Withdraw Requests -->
+    <div class="card" id="payoutsSection">
+      <h2>💸 উইথড্র রিকোয়েস্টসমূহ</h2>
       <div style="overflow-x:auto;">
         <table>
           <thead>
             <tr>
-              <th>লেখক</th>
-              <th>মাধ্যম ও নম্বর</th>
+              <th>রাইটার</th>
+              <th>পেমেন্ট মাধ্যম ও নম্বর</th>
               <th>পরিমাণ</th>
               <th>স্ট্যাটাস</th>
               <th>অ্যাকশন</th>
@@ -207,16 +287,23 @@
     </div>
   </div>
 
-  <div class="toast" id="toastBox"></div>
+  <div class="toast" id="adminToast"></div>
 
   <script type="module">
     import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
     import {
-      getFirestore, collection, doc, setDoc, updateDoc, deleteDoc,
-      onSnapshot, increment, query, orderBy
+      getFirestore,
+      collection,
+      doc,
+      getDoc,
+      setDoc,
+      updateDoc,
+      deleteDoc,
+      onSnapshot,
+      increment
     } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
 
-    // আপনার Firebase প্রজেক্টের কনফিগ এখানে বসান
+    // আপনার Firebase Project-এর আসল config দিন
     const firebaseConfig = {
       apiKey: "YOUR_API_KEY",
       authDomain: "YOUR_PROJECT_ID.firebaseapp.com",
@@ -229,173 +316,149 @@
     const app = initializeApp(firebaseConfig);
     const db = getFirestore(app);
 
-    let categories = ["সব গল্প", "রহস্য", "রোমান্টিক", "ভৌতিক", "গল্প"];
-
-    function showToast(msg) {
-      const el = document.getElementById("toastBox");
+    window.showToast = function (msg) {
+      const el = document.getElementById("adminToast");
       el.textContent = msg;
-      el.style.display = "block";
-      setTimeout(() => { el.style.display = "none"; }, 2600);
-    }
-
-    function renderCategoryChips() {
-      const box = document.getElementById("categoryChipsList");
-      box.innerHTML = "";
-      categories.forEach((cat) => {
-        const chip = document.createElement("span");
-        chip.className = "chip";
-        chip.innerHTML = `<span>${cat}</span>`;
-        if (cat !== "সব গল্প") {
-          const btn = document.createElement("button");
-          btn.textContent = "×";
-          btn.onclick = () => {
-            categories = categories.filter((c) => c !== cat);
-            renderCategoryChips();
-          };
-          chip.appendChild(btn);
-        }
-        box.appendChild(chip);
-      });
-    }
-
-    window.addCategory = function () {
-      const input = document.getElementById("newCategoryInput");
-      const val = input.value.trim();
-      if (!val) return;
-      if (!categories.includes(val)) {
-        categories.push(val);
-        renderCategoryChips();
-      }
-      input.value = "";
+      el.classList.add("show");
+      setTimeout(() => el.classList.remove("show"), 2600);
     };
 
-    window.saveGlobalConfig = async function () {
-      const payload = {
-        defaultTheme: document.getElementById("cfgDefaultTheme").value,
-        defaultFontSize: parseFloat(document.getElementById("cfgDefaultFontSize").value) || 17,
-        excerptWordLimit: parseInt(document.getElementById("cfgExcerptWordLimit").value, 10) || 60,
-        allowWriterPublish: document.getElementById("cfgAllowWriterPublish").checked,
-        requireRewardAdForLocked: document.getElementById("cfgRequireRewardAdForLocked").checked,
-        showCompletedBadge: document.getElementById("cfgShowCompletedBadge").checked,
-        maintenanceMode: document.getElementById("cfgMaintenanceMode").checked,
-        appNotice: document.getElementById("cfgAppNotice").value.trim(),
-        unlockRewardAmount: parseFloat(document.getElementById("cfgUnlockRewardAmount").value) || 1.0,
-        minWithdrawAmount: parseFloat(document.getElementById("cfgMinWithdrawAmount").value) || 10.0,
-        withdrawEnabled: document.getElementById("cfgWithdrawEnabled").checked,
-        categories: categories,
-        updatedAt: Date.now()
-      };
-
-      try {
-        await setDoc(doc(db, "app_config", "global"), payload, { merge: true });
-        showToast("গ্লোবাল কন্ট্রোল সেটিংস সেভ হয়েছে!");
-      } catch (e) {
-        showToast("সেভ করতে সমস্যা হয়েছে");
-      }
+    window.scrollToSection = function (id) {
+      document.getElementById(id)?.scrollIntoView({ behavior: "smooth" });
     };
 
-    // Listen to global config
-    onSnapshot(doc(db, "app_config", "global"), (snap) => {
+    // Load Global Config once
+    async function loadGlobalConfigOnce() {
+      const ref = doc(db, "app_config", "global");
+      const snap = await getDoc(ref);
       if (!snap.exists()) return;
       const d = snap.data();
+
       document.getElementById("cfgDefaultTheme").value = d.defaultTheme || "LIGHT";
       document.getElementById("cfgDefaultFontSize").value = d.defaultFontSize ?? 17;
       document.getElementById("cfgExcerptWordLimit").value = d.excerptWordLimit ?? 60;
-      document.getElementById("cfgAllowWriterPublish").checked = d.allowWriterPublish ?? true;
-      document.getElementById("cfgRequireRewardAdForLocked").checked = d.requireRewardAdForLocked ?? true;
-      document.getElementById("cfgShowCompletedBadge").checked = d.showCompletedBadge ?? true;
-      document.getElementById("cfgMaintenanceMode").checked = d.maintenanceMode ?? false;
+      document.getElementById("cfgUnlockReward").value = d.unlockRewardAmount ?? 1;
+      document.getElementById("cfgMinWithdraw").value = d.minWithdrawAmount ?? 10;
       document.getElementById("cfgAppNotice").value = d.appNotice || "";
-      document.getElementById("cfgUnlockRewardAmount").value = d.unlockRewardAmount ?? 1.0;
-      document.getElementById("cfgMinWithdrawAmount").value = d.minWithdrawAmount ?? 10.0;
+      document.getElementById("cfgAllowWriterPublish").checked = d.allowWriterPublish ?? true;
+      document.getElementById("cfgRequireRewardAd").checked = d.requireRewardAdForLocked ?? true;
+      document.getElementById("cfgShowCompletedBadge").checked = d.showCompletedBadge ?? true;
       document.getElementById("cfgWithdrawEnabled").checked = d.withdrawEnabled ?? true;
-      if (Array.isArray(d.categories) && d.categories.length > 0) {
-        categories = d.categories;
-      }
-      renderCategoryChips();
-    });
+      document.getElementById("cfgMaintenanceMode").checked = d.maintenanceMode ?? false;
 
-    // Chapters listener
+      if (Array.isArray(d.categories) && d.categories.length > 0) {
+        document.getElementById("cfgCategories").value = d.categories.join(", ");
+      }
+    }
+
+    window.saveGlobalConfig = async function () {
+      const categories = document.getElementById("cfgCategories").value
+        .split(",")
+        .map((s) => s.trim())
+        .filter(Boolean);
+
+      const payload = {
+        defaultTheme: document.getElementById("cfgDefaultTheme").value,
+        defaultFontSize: Number(document.getElementById("cfgDefaultFontSize").value || 17),
+        excerptWordLimit: Number(document.getElementById("cfgExcerptWordLimit").value || 60),
+        unlockRewardAmount: Number(document.getElementById("cfgUnlockReward").value || 1),
+        minWithdrawAmount: Number(document.getElementById("cfgMinWithdraw").value || 10),
+        appNotice: document.getElementById("cfgAppNotice").value.trim(),
+        allowWriterPublish: document.getElementById("cfgAllowWriterPublish").checked,
+        requireRewardAdForLocked: document.getElementById("cfgRequireRewardAd").checked,
+        showCompletedBadge: document.getElementById("cfgShowCompletedBadge").checked,
+        withdrawEnabled: document.getElementById("cfgWithdrawEnabled").checked,
+        maintenanceMode: document.getElementById("cfgMaintenanceMode").checked,
+        categories: categories.length ? categories : ["গল্প", "রোমান্টিক", "রহস্য", "ভৌতিক"],
+        updatedAt: Date.now()
+      };
+
+      await setDoc(doc(db, "app_config", "global"), payload, { merge: true });
+      showToast("গ্লোবাল অ্যাপ সেটিংস সেভ হয়েছে!");
+    };
+
+    // Chapters Listener
     onSnapshot(collection(db, "chapters"), (snap) => {
       const tbody = document.getElementById("chaptersTableBody");
       tbody.innerHTML = "";
-      document.getElementById("statChapters").textContent = snap.size;
+      let total = 0;
+      let pending = 0;
 
-      let pendingCount = 0;
-      snap.forEach((docSnap) => {
-        const c = docSnap.data();
-        const id = docSnap.id;
-        const status = (c.approvalStatus || "PENDING").toUpperCase();
-        if (status === "PENDING") pendingCount++;
+      const docs = snap.docs
+        .map((d) => ({ id: d.id, ...d.data() }))
+        .sort((a, b) => (b.createdAt || 0) - (a.createdAt || 0));
 
-        const isLocked = Boolean(c.isLocked);
-        const isCompleted = Boolean(c.isStoryCompleted || c.isLastChapter);
+      total = docs.length;
+      for (const ch of docs) {
+        const status = (ch.approvalStatus || "PENDING").toUpperCase();
+        if (status === "PENDING") pending++;
         const badgeClass = status === "APPROVED" ? "b-approved" : status === "REJECTED" ? "b-rejected" : "b-pending";
+        const previewText = (ch.content || "").slice(0, 180);
 
         const tr = document.createElement("tr");
         tr.innerHTML = `
-          <td><strong>${c.storyTitle || "নামহীন"}</strong><br/>পর্ব ${c.chapterNumber || 1}</td>
-          <td>${c.writerName || "Mahmud"}<br/><small>${c.writerId || ""}</small></td>
-          <td>${c.category || "গল্প"}</td>
-          <td>${isLocked ? "🔒 Locked" : "🔓 Free"}</td>
-          <td>${isCompleted ? "✅ সম্পন্ন" : "চলমান"}</td>
+          <td>
+            <strong>${ch.storyTitle || "নামহীন গল্প"}</strong> — পর্ব ${ch.chapterNumber || 1}
+            <div class="preview-box">${previewText}</div>
+          </td>
+          <td>${ch.writerName || "Mahmud"}<br/><small>${ch.writerId || ""}</small></td>
+          <td>
+            ${ch.category || "গল্প"}<br/>
+            <small>${ch.isLocked ? "🔒 Reward Ad Locked" : "🔓 Free"}</small>
+            ${ch.isStoryCompleted ? "<br/><small>✅ সম্পন্ন</small>" : ""}
+          </td>
           <td><span class="badge ${badgeClass}">${status}</span></td>
           <td>
             <div class="row-actions">
-              <button class="success" onclick="setChapterStatus('${id}', 'APPROVED')">Approve</button>
-              <button class="warning" onclick="setChapterStatus('${id}', 'PENDING')">Pending</button>
-              <button onclick="toggleChapterLock('${id}', ${!isLocked})">${isLocked ? "Unlock" : "Lock"}</button>
-              <button class="secondary" onclick="toggleChapterCompleted('${id}', ${!isCompleted})">${isCompleted ? "Unmark Done" : "Mark Done"}</button>
-              <button class="danger" onclick="deleteChapterDoc('${id}')">Delete</button>
+              <button class="success" onclick="setChapterStatus('${ch.id}', 'APPROVED')">Approve</button>
+              <button class="warning" onclick="setChapterStatus('${ch.id}', 'REJECTED')">Reject</button>
+              <button class="danger" onclick="deleteChapterDoc('${ch.id}')">Delete</button>
             </div>
           </td>
         `;
         tbody.appendChild(tr);
-      });
-      document.getElementById("statPendingChapters").textContent = pendingCount;
+      }
+
+      document.getElementById("statTotalChapters").textContent = String(total);
+      document.getElementById("statPendingChapters").textContent = String(pending);
     });
 
-    window.setChapterStatus = async function (id, status) {
-      await updateDoc(doc(db, "chapters", id), { approvalStatus: status });
-      showToast(`পর্বের স্ট্যাটাস ${status} করা হয়েছে`);
+    window.setChapterStatus = async function (chapterId, nextStatus) {
+      await updateDoc(doc(db, "chapters", chapterId), { approvalStatus: nextStatus });
+      showToast(`পর্বের স্ট্যাটাস ${nextStatus} করা হয়েছে`);
     };
 
-    window.toggleChapterLock = async function (id, nextLocked) {
-      await updateDoc(doc(db, "chapters", id), { isLocked: nextLocked });
-      showToast(nextLocked ? "পর্বটি লক করা হয়েছে" : "পর্বটি আনলক করা হয়েছে");
-    };
-
-    window.toggleChapterCompleted = async function (id, nextCompleted) {
-      await updateDoc(doc(db, "chapters", id), {
-        isStoryCompleted: nextCompleted,
-        isLastChapter: nextCompleted
-      });
-      showToast("সম্পন্ন স্ট্যাটাস আপডেট হয়েছে");
-    };
-
-    window.deleteChapterDoc = async function (id) {
-      await deleteDoc(doc(db, "chapters", id));
+    window.deleteChapterDoc = async function (chapterId) {
+      await deleteDoc(doc(db, "chapters", chapterId));
       showToast("পর্বটি ডিলিট করা হয়েছে");
     };
 
-    // Writers listener
+    // Writers Listener (Approval + Balance Control)
     onSnapshot(collection(db, "writers"), (snap) => {
       const tbody = document.getElementById("writersTableBody");
       tbody.innerHTML = "";
+      document.getElementById("statTotalWriters").textContent = String(snap.size);
+
       snap.forEach((docSnap) => {
         const w = docSnap.data();
         const wid = docSnap.id;
+        const phone = w.phone || wid.replace("writer_", "");
+        const approval = (w.approvalStatus || "PENDING").toUpperCase();
         const bal = Number(w.balance || 0);
         const views = Number(w.totalUnlockedViews || 0);
+        const badgeClass = approval === "APPROVED" ? "b-approved" : approval === "REJECTED" ? "b-rejected" : "b-pending";
 
         const tr = document.createElement("tr");
         tr.innerHTML = `
           <td>${wid}</td>
-          <td>${w.writerName || "Mahmud"}</td>
+          <td><strong>${w.writerName || "Mahmud"}</strong><br/><small>${phone}</small></td>
+          <td><span class="badge ${badgeClass}">${approval}</span></td>
           <td><strong>${bal.toFixed(2)}</strong></td>
           <td>${views}</td>
           <td>
             <div class="row-actions">
+              <button class="success" onclick="setWriterApproval('${wid}', '${phone}', 'APPROVED')">Approve Writer</button>
+              <button class="warning" onclick="setWriterApproval('${wid}', '${phone}', 'PENDING')">Keep Reader (Pending)</button>
               <button class="success" onclick="adjustWriterBalance('${wid}', 10)">+10</button>
               <button class="warning" onclick="adjustWriterBalance('${wid}', -10)">-10</button>
             </div>
@@ -405,56 +468,71 @@
       });
     });
 
-    window.adjustWriterBalance = async function (writerId, delta) {
-      await setDoc(doc(db, "writers", writerId), { balance: increment(delta) }, { merge: true });
-      showToast(`ব্যালেন্স ${delta > 0 ? "+" + delta : delta} আপডেট হয়েছে`);
+    window.setWriterApproval = async function (writerId, phone, nextStatus) {
+      const nextRole = nextStatus === "APPROVED" ? "WRITER" : "READER";
+      await setDoc(doc(db, "writers", writerId), { approvalStatus: nextStatus, role: nextRole }, { merge: true });
+      if (phone) {
+        await setDoc(doc(db, "users", "user_" + phone), {
+          writerApprovalStatus: nextStatus,
+          role: nextRole
+        }, { merge: true });
+      }
+      showToast(`Writer স্ট্যাটাস ${nextStatus} (${nextRole}) করা হয়েছে`);
     };
 
-    // Payout requests listener
+    window.adjustWriterBalance = async function (writerId, delta) {
+      await setDoc(doc(db, "writers", writerId), { balance: increment(delta) }, { merge: true });
+      showToast(`ব্যালেন্স ${delta > 0 ? "+" : ""}${delta} আপডেট হয়েছে`);
+    };
+
+    // Payout Requests Listener
     onSnapshot(collection(db, "payout_requests"), (snap) => {
       const tbody = document.getElementById("payoutsTableBody");
       tbody.innerHTML = "";
-      let pendingPayouts = 0;
+      let pendingCount = 0;
 
-      snap.forEach((docSnap) => {
-        const p = docSnap.data();
-        const pid = docSnap.id;
+      const docs = snap.docs
+        .map((d) => ({ id: d.id, ...d.data() }))
+        .sort((a, b) => (b.createdAt || 0) - (a.createdAt || 0));
+
+      for (const p of docs) {
         const status = (p.status || "PENDING").toUpperCase();
-        if (status === "PENDING") pendingPayouts++;
+        if (status === "PENDING") pendingCount++;
+        const badgeClass = status === "PAID" || status === "APPROVED" ? "b-paid" : status === "REJECTED" ? "b-rejected" : "b-pending";
 
-        const badgeClass = status === "APPROVED" || status === "PAID" ? "b-approved" : status === "REJECTED" ? "b-rejected" : "b-pending";
         const tr = document.createElement("tr");
         tr.innerHTML = `
-          <td>${p.writerName || "Mahmud"}<br/><small>${p.writerId || ""}</small></td>
-          <td>${p.method || "-"} — <strong>${p.account || "-"}</strong></td>
+          <td><strong>${p.writerName || "Mahmud"}</strong><br/><small>${p.writerId || ""}</small></td>
+          <td>${p.method || "-"}<br/><small>${p.account || "-"}</small></td>
           <td><strong>${Number(p.amount || 0).toFixed(2)}</strong></td>
           <td><span class="badge ${badgeClass}">${status}</span></td>
           <td>
             <div class="row-actions">
-              <button class="success" onclick="updatePayoutStatus('${pid}', 'APPROVED')">Approve / Paid</button>
-              <button class="danger" onclick="rejectAndRefundPayout('${pid}', '${p.writerId || ""}', ${Number(p.amount || 0)}, '${status}')">Reject &amp; Refund</button>
+              <button class="success" onclick="setPayoutStatus('${p.id}', 'PAID')">Mark Paid</button>
+              <button class="danger" onclick="refundAndRejectPayout('${p.id}', '${p.writerId || ""}', ${Number(p.amount || 0)})">Reject & Refund</button>
             </div>
           </td>
         `;
         tbody.appendChild(tr);
-      });
-      document.getElementById("statPendingPayouts").textContent = pendingPayouts;
+      }
+
+      document.getElementById("statPendingPayouts").textContent = String(pendingCount);
     });
 
-    window.updatePayoutStatus = async function (payoutId, status) {
-      await updateDoc(doc(db, "payout_requests", payoutId), { status });
-      showToast(`উইথড্র স্ট্যাটাস ${status} করা হয়েছে`);
+    window.setPayoutStatus = async function (payoutId, nextStatus) {
+      await updateDoc(doc(db, "payout_requests", payoutId), { status: nextStatus });
+      showToast(`উইথড্র স্ট্যাটাস ${nextStatus} হয়েছে`);
     };
 
-    window.rejectAndRefundPayout = async function (payoutId, writerId, amount, currentStatus) {
+    window.refundAndRejectPayout = async function (payoutId, writerId, amount) {
       await updateDoc(doc(db, "payout_requests", payoutId), { status: "REJECTED" });
-      if (currentStatus === "PENDING" && writerId && amount > 0) {
+      if (writerId && amount > 0) {
         await setDoc(doc(db, "writers", writerId), { balance: increment(amount) }, { merge: true });
       }
-      showToast("উইথড্র বাতিল ও ব্যালেন্স ফেরত দেওয়া হয়েছে");
+      showToast("উইথড্র রিজেক্ট ও ব্যালেন্স রিফান্ড করা হয়েছে");
     };
 
-    renderCategoryChips();
+    loadGlobalConfigOnce();
   </script>
 </body>
 </html>
