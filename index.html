@@ -303,14 +303,14 @@
       increment
     } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
 
-    // আপনার Firebase Project-এর আসল config দিন
     const firebaseConfig = {
-      apiKey: "YOUR_API_KEY",
-      authDomain: "YOUR_PROJECT_ID.firebaseapp.com",
-      projectId: "YOUR_PROJECT_ID",
-      storageBucket: "YOUR_PROJECT_ID.appspot.com",
-      messagingSenderId: "YOUR_SENDER_ID",
-      appId: "YOUR_APP_ID"
+      apiKey: "AIzaSyCQYPWomeaukq2CigqhLCkzAJa0e7v6IFA",
+      authDomain: "kolpo-lipi.firebaseapp.com",
+      projectId: "kolpo-lipi",
+      storageBucket: "kolpo-lipi.firebasestorage.app",
+      messagingSenderId: "969727723551",
+      appId: "1:969727723551:web:234f59488b79617bcaad2a",
+      measurementId: "G-K8PMEMPC2S"
     };
 
     const app = initializeApp(firebaseConfig);
@@ -327,7 +327,6 @@
       document.getElementById(id)?.scrollIntoView({ behavior: "smooth" });
     };
 
-    // Load Global Config once
     async function loadGlobalConfigOnce() {
       const ref = doc(db, "app_config", "global");
       const snap = await getDoc(ref);
@@ -377,7 +376,6 @@
       showToast("গ্লোবাল অ্যাপ সেটিংস সেভ হয়েছে!");
     };
 
-    // Chapters Listener
     onSnapshot(collection(db, "chapters"), (snap) => {
       const tbody = document.getElementById("chaptersTableBody");
       tbody.innerHTML = "";
@@ -433,7 +431,6 @@
       showToast("পর্বটি ডিলিট করা হয়েছে");
     };
 
-    // Writers Listener (Approval + Balance Control)
     onSnapshot(collection(db, "writers"), (snap) => {
       const tbody = document.getElementById("writersTableBody");
       tbody.innerHTML = "";
@@ -485,7 +482,6 @@
       showToast(`ব্যালেন্স ${delta > 0 ? "+" : ""}${delta} আপডেট হয়েছে`);
     };
 
-    // Payout Requests Listener
     onSnapshot(collection(db, "payout_requests"), (snap) => {
       const tbody = document.getElementById("payoutsTableBody");
       tbody.innerHTML = "";
