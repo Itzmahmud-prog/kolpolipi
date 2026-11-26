@@ -22,6 +22,19 @@
     }
     .topbar h1 { font-size: 22px; color: #1877f2; }
     .topbar p { font-size: 13px; color: #65676b; }
+    .status-bar {
+      background: #e7f0ff;
+      color: #1877f2;
+      padding: 10px 14px;
+      border-radius: 10px;
+      font-size: 12px;
+      font-weight: 700;
+      margin-bottom: 16px;
+    }
+    .status-bar.error {
+      background: #fee2e2;
+      color: #991b1b;
+    }
     .stats-grid {
       display: grid;
       grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
@@ -88,6 +101,7 @@
       transition: opacity 0.15s ease;
     }
     button:hover { opacity: 0.9; }
+    button:disabled { opacity: 0.5; cursor: not-allowed; }
     .primary { background: #1877f2; color: #ffffff; }
     .success { background: #16a34a; color: #ffffff; }
     .warning { background: #d97706; color: #ffffff; }
@@ -152,13 +166,14 @@
         <p>গল্পের পর্ব অনুমোদন, রাইটার অ্যাপ্রুভাল, উইথড্র ও অ্যাপ সেটিংস নিয়ন্ত্রণ</p>
       </div>
       <div class="row-actions">
-        <button class="secondary" onclick="scrollToSection('chaptersSection')">গল্পের পর্ব</button>
-        <button class="secondary" onclick="scrollToSection('writersSection')">রাইটার ও অ্যাপ্রুভাল</button>
-        <button class="secondary" onclick="scrollToSection('payoutsSection')">উইথড্র রিকোয়েস্ট</button>
+        <button type="button" class="secondary" data-scroll="chaptersSection">গল্পের পর্ব</button>
+        <button type="button" class="secondary" data-scroll="writersSection">রাইটার ও অ্যাপ্রুভাল</button>
+        <button type="button" class="secondary" data-scroll="payoutsSection">উইথড্র রিকোয়েস্ট</button>
       </div>
     </div>
 
-    <!-- Summary Stats -->
+    <div class="status-bar" id="connectionStatus">Firestore সংযোগ যাচাই করা হচ্ছে...</div>
+
     <div class="stats-grid">
       <div class="stat-card">
         <div class="stat-label">মোট পর্ব</div>
@@ -178,7 +193,6 @@
       </div>
     </div>
 
-    <!-- Global App Config -->
     <div class="card">
       <h2>⚙️ গ্লোবাল অ্যাপ সেটিংস (app_config/global)</h2>
       <div class="form-grid">
@@ -225,10 +239,9 @@
         <label class="check-item"><input type="checkbox" id="cfgMaintenanceMode" /> মেইনটেন্যান্স মোড</label>
       </div>
 
-      <button class="primary" onclick="saveGlobalConfig()">সেটিংস সেভ করুন</button>
+      <button type="button" class="primary" id="btnSaveGlobalConfig">সেটিংস সেভ করুন</button>
     </div>
 
-    <!-- Chapters Approval Table -->
     <div class="card" id="chaptersSection">
       <h2>📖 গল্পের পর্বসমূহ (PENDING / APPROVED / REJECTED)</h2>
       <div style="overflow-x:auto;">
@@ -247,7 +260,6 @@
       </div>
     </div>
 
-    <!-- Writers Account, Approval & Balance Control -->
     <div class="card" id="writersSection">
       <h2>✍️ রাইটার অ্যাকাউন্ট, অ্যাপ্রুভাল ও ব্যালেন্স নিয়ন্ত্রণ</h2>
       <div style="overflow-x:auto;">
@@ -267,7 +279,6 @@
       </div>
     </div>
 
-    <!-- Payout / Withdraw Requests -->
     <div class="card" id="payoutsSection">
       <h2>💸 উইথড্র রিকোয়েস্টসমূহ</h2>
       <div style="overflow-x:auto;">
@@ -315,83 +326,106 @@
 
     const app = initializeApp(firebaseConfig);
     const db = getFirestore(app);
+    const statusEl = document.getElementById("connectionStatus");
 
-    window.showToast = function (msg) {
+    function setStatus(msg, isError = false) {
+      statusEl.textContent = msg;
+      statusEl.classList.toggle("error", isError);
+    }
+
+    function showToast(msg) {
       const el = document.getElementById("adminToast");
       el.textContent = msg;
       el.classList.add("show");
       setTimeout(() => el.classList.remove("show"), 2600);
-    };
+    }
 
-    window.scrollToSection = function (id) {
-      document.getElementById(id)?.scrollIntoView({ behavior: "smooth" });
-    };
+    // Top navigation scroll buttons
+    document.querySelectorAll("[data-scroll]").forEach((btn) => {
+      btn.addEventListener("click", () => {
+        const targetId = btn.getAttribute("data-scroll");
+        document.getElementById(targetId)?.scrollIntoView({ behavior: "smooth" });
+      });
+    });
 
     async function loadGlobalConfigOnce() {
-      const ref = doc(db, "app_config", "global");
-      const snap = await getDoc(ref);
-      if (!snap.exists()) return;
-      const d = snap.data();
+      try {
+        const ref = doc(db, "app_config", "global");
+        const snap = await getDoc(ref);
+        setStatus("Firestore সংযুক্ত আছে (kolpo-lipi)", false);
+        if (!snap.exists()) return;
+        const d = snap.data();
 
-      document.getElementById("cfgDefaultTheme").value = d.defaultTheme || "LIGHT";
-      document.getElementById("cfgDefaultFontSize").value = d.defaultFontSize ?? 17;
-      document.getElementById("cfgExcerptWordLimit").value = d.excerptWordLimit ?? 60;
-      document.getElementById("cfgUnlockReward").value = d.unlockRewardAmount ?? 1;
-      document.getElementById("cfgMinWithdraw").value = d.minWithdrawAmount ?? 10;
-      document.getElementById("cfgAppNotice").value = d.appNotice || "";
-      document.getElementById("cfgAllowWriterPublish").checked = d.allowWriterPublish ?? true;
-      document.getElementById("cfgRequireRewardAd").checked = d.requireRewardAdForLocked ?? true;
-      document.getElementById("cfgShowCompletedBadge").checked = d.showCompletedBadge ?? true;
-      document.getElementById("cfgWithdrawEnabled").checked = d.withdrawEnabled ?? true;
-      document.getElementById("cfgMaintenanceMode").checked = d.maintenanceMode ?? false;
+        document.getElementById("cfgDefaultTheme").value = d.defaultTheme || "LIGHT";
+        document.getElementById("cfgDefaultFontSize").value = d.defaultFontSize ?? 17;
+        document.getElementById("cfgExcerptWordLimit").value = d.excerptWordLimit ?? 60;
+        document.getElementById("cfgUnlockReward").value = d.unlockRewardAmount ?? 1;
+        document.getElementById("cfgMinWithdraw").value = d.minWithdrawAmount ?? 10;
+        document.getElementById("cfgAppNotice").value = d.appNotice || "";
+        document.getElementById("cfgAllowWriterPublish").checked = d.allowWriterPublish ?? true;
+        document.getElementById("cfgRequireRewardAd").checked = d.requireRewardAdForLocked ?? true;
+        document.getElementById("cfgShowCompletedBadge").checked = d.showCompletedBadge ?? true;
+        document.getElementById("cfgWithdrawEnabled").checked = d.withdrawEnabled ?? true;
+        document.getElementById("cfgMaintenanceMode").checked = d.maintenanceMode ?? false;
 
-      if (Array.isArray(d.categories) && d.categories.length > 0) {
-        document.getElementById("cfgCategories").value = d.categories.join(", ");
+        if (Array.isArray(d.categories) && d.categories.length > 0) {
+          document.getElementById("cfgCategories").value = d.categories.join(", ");
+        }
+      } catch (err) {
+        setStatus("Firestore সংযোগ বা Rules এরর: " + (err?.message || err), true);
       }
     }
 
-    window.saveGlobalConfig = async function () {
-      const categories = document.getElementById("cfgCategories").value
-        .split(",")
-        .map((s) => s.trim())
-        .filter(Boolean);
+    document.getElementById("btnSaveGlobalConfig").addEventListener("click", async () => {
+      const btn = document.getElementById("btnSaveGlobalConfig");
+      btn.disabled = true;
+      try {
+        const categories = document.getElementById("cfgCategories").value
+          .split(",")
+          .map((s) => s.trim())
+          .filter(Boolean);
 
-      const payload = {
-        defaultTheme: document.getElementById("cfgDefaultTheme").value,
-        defaultFontSize: Number(document.getElementById("cfgDefaultFontSize").value || 17),
-        excerptWordLimit: Number(document.getElementById("cfgExcerptWordLimit").value || 60),
-        unlockRewardAmount: Number(document.getElementById("cfgUnlockReward").value || 1),
-        minWithdrawAmount: Number(document.getElementById("cfgMinWithdraw").value || 10),
-        appNotice: document.getElementById("cfgAppNotice").value.trim(),
-        allowWriterPublish: document.getElementById("cfgAllowWriterPublish").checked,
-        requireRewardAdForLocked: document.getElementById("cfgRequireRewardAd").checked,
-        showCompletedBadge: document.getElementById("cfgShowCompletedBadge").checked,
-        withdrawEnabled: document.getElementById("cfgWithdrawEnabled").checked,
-        maintenanceMode: document.getElementById("cfgMaintenanceMode").checked,
-        categories: categories.length ? categories : ["গল্প", "রোমান্টিক", "রহস্য", "ভৌতিক"],
-        updatedAt: Date.now()
-      };
+        const payload = {
+          defaultTheme: document.getElementById("cfgDefaultTheme").value,
+          defaultFontSize: Number(document.getElementById("cfgDefaultFontSize").value || 17),
+          excerptWordLimit: Number(document.getElementById("cfgExcerptWordLimit").value || 60),
+          unlockRewardAmount: Number(document.getElementById("cfgUnlockReward").value || 1),
+          minWithdrawAmount: Number(document.getElementById("cfgMinWithdraw").value || 10),
+          appNotice: document.getElementById("cfgAppNotice").value.trim(),
+          allowWriterPublish: document.getElementById("cfgAllowWriterPublish").checked,
+          requireRewardAdForLocked: document.getElementById("cfgRequireRewardAd").checked,
+          showCompletedBadge: document.getElementById("cfgShowCompletedBadge").checked,
+          withdrawEnabled: document.getElementById("cfgWithdrawEnabled").checked,
+          maintenanceMode: document.getElementById("cfgMaintenanceMode").checked,
+          categories: categories.length ? categories : ["গল্প", "রোমান্টিক", "রহস্য", "ভৌতিক"],
+          updatedAt: Date.now()
+        };
 
-      await setDoc(doc(db, "app_config", "global"), payload, { merge: true });
-      showToast("গ্লোবাল অ্যাপ সেটিংস সেভ হয়েছে!");
-    };
+        await setDoc(doc(db, "app_config", "global"), payload, { merge: true });
+        showToast("গ্লোবাল অ্যাপ সেটিংস সেভ হয়েছে!");
+      } catch (err) {
+        showToast("সেভ করতে সমস্যা হয়েছে: " + (err?.message || ""));
+      } finally {
+        btn.disabled = false;
+      }
+    });
 
+    // Chapters Table + Event Delegation
+    const chaptersTbody = document.getElementById("chaptersTableBody");
     onSnapshot(collection(db, "chapters"), (snap) => {
-      const tbody = document.getElementById("chaptersTableBody");
-      tbody.innerHTML = "";
-      let total = 0;
+      setStatus("Firestore লাইভ সিঙ্ক চালু আছে (kolpo-lipi)", false);
+      chaptersTbody.innerHTML = "";
       let pending = 0;
 
       const docs = snap.docs
         .map((d) => ({ id: d.id, ...d.data() }))
         .sort((a, b) => (b.createdAt || 0) - (a.createdAt || 0));
 
-      total = docs.length;
       for (const ch of docs) {
         const status = (ch.approvalStatus || "PENDING").toUpperCase();
         if (status === "PENDING") pending++;
         const badgeClass = status === "APPROVED" ? "b-approved" : status === "REJECTED" ? "b-rejected" : "b-pending";
-        const previewText = (ch.content || "").slice(0, 180);
+        const previewText = String(ch.content || "").slice(0, 180);
 
         const tr = document.createElement("tr");
         tr.innerHTML = `
@@ -408,32 +442,49 @@
           <td><span class="badge ${badgeClass}">${status}</span></td>
           <td>
             <div class="row-actions">
-              <button class="success" onclick="setChapterStatus('${ch.id}', 'APPROVED')">Approve</button>
-              <button class="warning" onclick="setChapterStatus('${ch.id}', 'REJECTED')">Reject</button>
-              <button class="danger" onclick="deleteChapterDoc('${ch.id}')">Delete</button>
+              <button type="button" class="success" data-ch-action="status" data-ch-id="${ch.id}" data-status="APPROVED">Approve</button>
+              <button type="button" class="warning" data-ch-action="status" data-ch-id="${ch.id}" data-status="REJECTED">Reject</button>
+              <button type="button" class="danger" data-ch-action="delete" data-ch-id="${ch.id}">Delete</button>
             </div>
           </td>
         `;
-        tbody.appendChild(tr);
+        chaptersTbody.appendChild(tr);
       }
 
-      document.getElementById("statTotalChapters").textContent = String(total);
+      document.getElementById("statTotalChapters").textContent = String(docs.length);
       document.getElementById("statPendingChapters").textContent = String(pending);
+    }, (err) => {
+      setStatus("Chapters লোড এরর: " + (err?.message || err), true);
     });
 
-    window.setChapterStatus = async function (chapterId, nextStatus) {
-      await updateDoc(doc(db, "chapters", chapterId), { approvalStatus: nextStatus });
-      showToast(`পর্বের স্ট্যাটাস ${nextStatus} করা হয়েছে`);
-    };
+    chaptersTbody.addEventListener("click", async (e) => {
+      const btn = e.target.closest("button[data-ch-action]");
+      if (!btn) return;
+      const action = btn.getAttribute("data-ch-action");
+      const chapterId = btn.getAttribute("data-ch-id");
+      if (!chapterId) return;
 
-    window.deleteChapterDoc = async function (chapterId) {
-      await deleteDoc(doc(db, "chapters", chapterId));
-      showToast("পর্বটি ডিলিট করা হয়েছে");
-    };
+      btn.disabled = true;
+      try {
+        if (action === "status") {
+          const nextStatus = btn.getAttribute("data-status");
+          await updateDoc(doc(db, "chapters", chapterId), { approvalStatus: nextStatus });
+          showToast(`পর্বের স্ট্যাটাস ${nextStatus} করা হয়েছে`);
+        } else if (action === "delete") {
+          await deleteDoc(doc(db, "chapters", chapterId));
+          showToast("পর্বটি ডিলিট করা হয়েছে");
+        }
+      } catch (err) {
+        showToast("অ্যাকশন সম্পন্ন হয়নি: " + (err?.message || ""));
+      } finally {
+        btn.disabled = false;
+      }
+    });
 
+    // Writers Table + Event Delegation
+    const writersTbody = document.getElementById("writersTableBody");
     onSnapshot(collection(db, "writers"), (snap) => {
-      const tbody = document.getElementById("writersTableBody");
-      tbody.innerHTML = "";
+      writersTbody.innerHTML = "";
       document.getElementById("statTotalWriters").textContent = String(snap.size);
 
       snap.forEach((docSnap) => {
@@ -454,37 +505,56 @@
           <td>${views}</td>
           <td>
             <div class="row-actions">
-              <button class="success" onclick="setWriterApproval('${wid}', '${phone}', 'APPROVED')">Approve Writer</button>
-              <button class="warning" onclick="setWriterApproval('${wid}', '${phone}', 'PENDING')">Keep Reader (Pending)</button>
-              <button class="success" onclick="adjustWriterBalance('${wid}', 10)">+10</button>
-              <button class="warning" onclick="adjustWriterBalance('${wid}', -10)">-10</button>
+              <button type="button" class="success" data-w-action="approval" data-wid="${wid}" data-phone="${phone}" data-status="APPROVED">Approve Writer</button>
+              <button type="button" class="warning" data-w-action="approval" data-wid="${wid}" data-phone="${phone}" data-status="PENDING">Keep Reader (Pending)</button>
+              <button type="button" class="success" data-w-action="balance" data-wid="${wid}" data-delta="10">+10</button>
+              <button type="button" class="warning" data-w-action="balance" data-wid="${wid}" data-delta="-10">-10</button>
             </div>
           </td>
         `;
-        tbody.appendChild(tr);
+        writersTbody.appendChild(tr);
       });
+    }, (err) => {
+      setStatus("Writers লোড এরর: " + (err?.message || err), true);
     });
 
-    window.setWriterApproval = async function (writerId, phone, nextStatus) {
-      const nextRole = nextStatus === "APPROVED" ? "WRITER" : "READER";
-      await setDoc(doc(db, "writers", writerId), { approvalStatus: nextStatus, role: nextRole }, { merge: true });
-      if (phone) {
-        await setDoc(doc(db, "users", "user_" + phone), {
-          writerApprovalStatus: nextStatus,
-          role: nextRole
-        }, { merge: true });
+    writersTbody.addEventListener("click", async (e) => {
+      const btn = e.target.closest("button[data-w-action]");
+      if (!btn) return;
+      const action = btn.getAttribute("data-w-action");
+      const wid = btn.getAttribute("data-wid");
+      if (!wid) return;
+
+      btn.disabled = true;
+      try {
+        if (action === "approval") {
+          const nextStatus = btn.getAttribute("data-status");
+          const phone = btn.getAttribute("data-phone") || "";
+          const nextRole = nextStatus === "APPROVED" ? "WRITER" : "READER";
+          await setDoc(doc(db, "writers", wid), { approvalStatus: nextStatus, role: nextRole }, { merge: true });
+          if (phone) {
+            await setDoc(doc(db, "users", "user_" + phone), {
+              writerApprovalStatus: nextStatus,
+              role: nextRole
+            }, { merge: true });
+          }
+          showToast(`Writer স্ট্যাটাস ${nextStatus} (${nextRole}) করা হয়েছে`);
+        } else if (action === "balance") {
+          const delta = Number(btn.getAttribute("data-delta") || 0);
+          await setDoc(doc(db, "writers", wid), { balance: increment(delta) }, { merge: true });
+          showToast(`ব্যালেন্স ${delta > 0 ? "+" : ""}${delta} আপডেট হয়েছে`);
+        }
+      } catch (err) {
+        showToast("Writer আপডেট হয়নি: " + (err?.message || ""));
+      } finally {
+        btn.disabled = false;
       }
-      showToast(`Writer স্ট্যাটাস ${nextStatus} (${nextRole}) করা হয়েছে`);
-    };
+    });
 
-    window.adjustWriterBalance = async function (writerId, delta) {
-      await setDoc(doc(db, "writers", writerId), { balance: increment(delta) }, { merge: true });
-      showToast(`ব্যালেন্স ${delta > 0 ? "+" : ""}${delta} আপডেট হয়েছে`);
-    };
-
+    // Payouts Table + Event Delegation
+    const payoutsTbody = document.getElementById("payoutsTableBody");
     onSnapshot(collection(db, "payout_requests"), (snap) => {
-      const tbody = document.getElementById("payoutsTableBody");
-      tbody.innerHTML = "";
+      payoutsTbody.innerHTML = "";
       let pendingCount = 0;
 
       const docs = snap.docs
@@ -504,29 +574,46 @@
           <td><span class="badge ${badgeClass}">${status}</span></td>
           <td>
             <div class="row-actions">
-              <button class="success" onclick="setPayoutStatus('${p.id}', 'PAID')">Mark Paid</button>
-              <button class="danger" onclick="refundAndRejectPayout('${p.id}', '${p.writerId || ""}', ${Number(p.amount || 0)})">Reject & Refund</button>
+              <button type="button" class="success" data-p-action="paid" data-pid="${p.id}">Mark Paid</button>
+              <button type="button" class="danger" data-p-action="reject" data-pid="${p.id}" data-wid="${p.writerId || ""}" data-amount="${Number(p.amount || 0)}">Reject & Refund</button>
             </div>
           </td>
         `;
-        tbody.appendChild(tr);
+        payoutsTbody.appendChild(tr);
       }
 
       document.getElementById("statPendingPayouts").textContent = String(pendingCount);
+    }, (err) => {
+      setStatus("Payouts লোড এরর: " + (err?.message || err), true);
     });
 
-    window.setPayoutStatus = async function (payoutId, nextStatus) {
-      await updateDoc(doc(db, "payout_requests", payoutId), { status: nextStatus });
-      showToast(`উইথড্র স্ট্যাটাস ${nextStatus} হয়েছে`);
-    };
+    payoutsTbody.addEventListener("click", async (e) => {
+      const btn = e.target.closest("button[data-p-action]");
+      if (!btn) return;
+      const action = btn.getAttribute("data-p-action");
+      const pid = btn.getAttribute("data-pid");
+      if (!pid) return;
 
-    window.refundAndRejectPayout = async function (payoutId, writerId, amount) {
-      await updateDoc(doc(db, "payout_requests", payoutId), { status: "REJECTED" });
-      if (writerId && amount > 0) {
-        await setDoc(doc(db, "writers", writerId), { balance: increment(amount) }, { merge: true });
+      btn.disabled = true;
+      try {
+        if (action === "paid") {
+          await updateDoc(doc(db, "payout_requests", pid), { status: "PAID" });
+          showToast("উইথড্র স্ট্যাটাস PAID হয়েছে");
+        } else if (action === "reject") {
+          const wid = btn.getAttribute("data-wid") || "";
+          const amount = Number(btn.getAttribute("data-amount") || 0);
+          await updateDoc(doc(db, "payout_requests", pid), { status: "REJECTED" });
+          if (wid && amount > 0) {
+            await setDoc(doc(db, "writers", wid), { balance: increment(amount) }, { merge: true });
+          }
+          showToast("উইথড্র রিজেক্ট ও ব্যালেন্স রিফান্ড করা হয়েছে");
+        }
+      } catch (err) {
+        showToast("Payout আপডেট হয়নি: " + (err?.message || ""));
+      } finally {
+        btn.disabled = false;
       }
-      showToast("উইথড্র রিজেক্ট ও ব্যালেন্স রিফান্ড করা হয়েছে");
-    };
+    });
 
     loadGlobalConfigOnce();
   </script>
